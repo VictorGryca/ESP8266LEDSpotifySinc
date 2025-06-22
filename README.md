@@ -1,1 +1,1 @@
-# Powered by [GetSongBPM](https://getsongbpm.com/)
+# Powered by [getsongbpm.com](https://getsongbpm.com/)
