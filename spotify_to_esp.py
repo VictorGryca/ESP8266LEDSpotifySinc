@@ -69,7 +69,7 @@ while True:
             track_id = playback['item']['id']
             if track_id != last_track_id:
                 try:
-                    # Usar serviço externo, pois o endpoint de audio-features foi descontinuado
+                    # Usar serviço externo, pois o endpoint de audio-features do spotify foi descontinuado
                     title = playback['item']['name']
                     artist = playback['item']['artists'][0]['name']
                     bpm_ext = get_bpm_from_third_party(title, artist)

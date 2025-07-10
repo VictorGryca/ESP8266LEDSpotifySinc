@@ -7,8 +7,8 @@
 CRGB leds[NUM_LEDS];
 #define BRIGHTNESS 50 
 
-const char* ssid = "Gryca";
-const char* password = "r2d29090909090";
+const char* ssid = "R2D2_2G";
+const char* password = "9090909090";
 
 ESP8266WebServer server(80); // Use WebServer para ESP32
 int bpm = 120;
