@@ -129,19 +129,23 @@ while True:
         print(f"Tocando agora: {title} - {artist}")
 
         with bpm_lock:
+            # Se mudou de música ou está buscando, inicia nova busca
             if tid != last_track_id or searching_bpm:
-                # Se mudou de música ou está buscando, inicia nova busca
                 bpm = 0
                 send_to_esp(0)
                 print("Buscando BPM...")
                 if bpm_search_thread and bpm_search_thread.is_alive():
-                    # Interrompe busca anterior (apenas ignora resultado)
                     search_track_id = tid
                 bpm_search_thread = threading.Thread(target=bpm_search_worker, args=(tid, title, artist))
                 bpm_search_thread.start()
             else:
-                send_to_esp(bpm)
-                print(f"BPM enviado: {bpm}")
+                # Se BPM está 0 mas já temos last_bpm, envia last_bpm
+                if bpm == 0 and last_bpm and tid == last_track_id:
+                    send_to_esp(last_bpm)
+                    print(f"BPM enviado (retomado): {last_bpm}")
+                else:
+                    send_to_esp(bpm)
+                    print(f"BPM enviado: {bpm}")
     else:
         print("Nada tocando.")
         with bpm_lock:
