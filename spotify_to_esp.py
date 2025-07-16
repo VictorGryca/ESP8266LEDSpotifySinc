@@ -1,5 +1,3 @@
-# spotify_to_esp_hybrid_bpm.py
-
 import time
 import re
 import tempfile
@@ -92,8 +90,8 @@ def get_bpm(track_id: str, title: str, artist: str) -> int:
         print(f"[DEBUG] BPM via GetSongBPM: {bpm}")
         return bpm
 
-    print("[DEBUG] Não achou BPM — usando último.")
-    return last_bpm
+    print("[DEBUG] Não achou BPM — deixando a LED apagada.")
+    return 0
 
 def send_to_esp(bpm: int):
     try:
@@ -114,13 +112,15 @@ while True:
         if tid != last_track_id:
             bpm = get_bpm(tid, title, artist)
             last_bpm, last_track_id = bpm, tid
+        # Se a música é a mesma, mas estava pausada, reutiliza o último BPM
+        elif bpm == 0:
+            bpm = last_bpm
         send_to_esp(bpm)
         print(f"BPM enviado: {bpm}")
-
     else:
         print("Nada tocando.")
         bpm = 0
         send_to_esp(bpm)
         print(f"BPM enviado: {bpm}")
 
-    time.sleep(5)
+    time.sleep(1)
