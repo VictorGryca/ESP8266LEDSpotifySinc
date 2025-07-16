@@ -6,6 +6,7 @@ import spotipy
 import librosa
 from spotipy.oauth2 import SpotifyOAuth
 import credentials
+import threading
 
 # CONFIGURAÇÕES
 ESP_IP = credentials.ESP_IP
@@ -26,6 +27,11 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
 
 last_track_id = None
 last_bpm = 300
+bpm = 0
+bpm_lock = threading.Lock()
+bpm_search_thread = None
+searching_bpm = False
+search_track_id = None
 
 
 def get_bpm_from_preview(track_id: str) -> int | None:
@@ -99,6 +105,19 @@ def send_to_esp(bpm: int):
     except Exception as e:
         print(f"[DEBUG] Erro ao enviar para ESP: {e}")
 
+def bpm_search_worker(track_id, title, artist):
+    global bpm, last_bpm, last_track_id, searching_bpm, search_track_id
+    with bpm_lock:
+        searching_bpm = True
+        search_track_id = track_id
+    found_bpm = get_bpm(track_id, title, artist)
+    with bpm_lock:
+        # Só atualiza se ainda for a música atual
+        if search_track_id == track_id:
+            bpm = found_bpm
+            last_bpm, last_track_id = bpm, track_id
+            searching_bpm = False
+
 # Loop principal
 while True:
     playback = sp.current_playback()
@@ -109,19 +128,25 @@ while True:
         artist = item["artists"][0]["name"]
         print(f"Tocando agora: {title} - {artist}")
 
-        if tid != last_track_id:
-            send_to_esp(0)  # Envia BPM 0 enquanto busca
-            print("Buscando BPM...")
-            bpm = get_bpm(tid, title, artist)
-            last_bpm, last_track_id = bpm, tid
-        elif bpm == 0:
-            bpm = last_bpm
-        send_to_esp(bpm)
-        print(f"BPM enviado: {bpm}")
+        with bpm_lock:
+            if tid != last_track_id or searching_bpm:
+                # Se mudou de música ou está buscando, inicia nova busca
+                bpm = 0
+                send_to_esp(0)
+                print("Buscando BPM...")
+                if bpm_search_thread and bpm_search_thread.is_alive():
+                    # Interrompe busca anterior (apenas ignora resultado)
+                    search_track_id = tid
+                bpm_search_thread = threading.Thread(target=bpm_search_worker, args=(tid, title, artist))
+                bpm_search_thread.start()
+            else:
+                send_to_esp(bpm)
+                print(f"BPM enviado: {bpm}")
     else:
         print("Nada tocando.")
-        bpm = 0
-        send_to_esp(bpm)
-        print(f"BPM enviado: {bpm}")
+        with bpm_lock:
+            bpm = 0
+        send_to_esp(0)
+        print(f"BPM enviado: 0")
 
     time.sleep(0.5)
