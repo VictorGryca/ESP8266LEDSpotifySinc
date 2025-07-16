@@ -126,7 +126,8 @@ while True:
         tid = item["id"]
         title = item["name"]
         artist = item["artists"][0]["name"]
-        print(f"Tocando agora: {title} - {artist}")
+        progress_ms = playback.get("progress_ms")
+        print(f"Tocando agora: {title} - {artist} | Posição: {progress_ms} ms")
 
         with bpm_lock:
             # Se mudou de música ou está buscando, inicia nova busca
