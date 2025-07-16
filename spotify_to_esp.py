@@ -110,9 +110,10 @@ while True:
         print(f"Tocando agora: {title} - {artist}")
 
         if tid != last_track_id:
+            send_to_esp(0)  # Envia BPM 0 enquanto busca
+            print("Buscando BPM...")
             bpm = get_bpm(tid, title, artist)
             last_bpm, last_track_id = bpm, tid
-        # Se a música é a mesma, mas estava pausada, reutiliza o último BPM
         elif bpm == 0:
             bpm = last_bpm
         send_to_esp(bpm)
@@ -123,4 +124,4 @@ while True:
         send_to_esp(bpm)
         print(f"BPM enviado: {bpm}")
 
-    time.sleep(1)
+    time.sleep(0.5)
