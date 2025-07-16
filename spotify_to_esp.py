@@ -71,7 +71,7 @@ def get_bpm_from_getsongbpm(title: str, artist: str) -> int | None:
     }
 
     try:
-        resp = requests.get(url, params=params, headers=headers, timeout=5)
+        resp = requests.get(url, params=params, headers=headers, timeout=0.5)  
         print("[DEBUG] GETSongBPM URL:", resp.url)
         data = resp.json()
         tracks = data.get("search") or []
