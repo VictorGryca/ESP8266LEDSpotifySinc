@@ -11,19 +11,17 @@ const char* ssid = "R2D2_2G";
 const char* password = "9090909090";
 
 ESP8266WebServer server(80); // Use WebServer para ESP32
-int bpm = 120;
+int bpm = 300;
 unsigned long lastBeat = 0;
-unsigned long lastBpmUpdate = 0; // Novo: controla quando o BPM foi atualizado
-const unsigned long bpmTimeout = 10000; // 10 segundos sem BPM = para de piscar
-bool bpmActive = false;
 
 void handleBPM() {
   if (server.hasArg("bpm")) {
-    bpm = server.arg("bpm").toInt();
-    lastBpmUpdate = millis();
-    bpmActive = true;
-    server.send(200, "text/plain", "OK");
-  } else {
+      bpm = server.arg("bpm").toInt();
+      Serial.print("BPM atualizado: ");
+      Serial.println(bpm);
+      server.send(200, "text/plain", "OK");
+  }
+  else {
     server.send(400, "text/plain", "Missing bpm");
   }
 }
@@ -32,7 +30,7 @@ void setup() {
   Serial.begin(9600);
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness( BRIGHTNESS );
-  FastLED.clear();
+  fill_solid(leds, NUM_LEDS, CRGB::Black); // Inicializa todos os LEDs apagados
   FastLED.show();
 
   WiFi.begin(ssid, password);
@@ -48,23 +46,33 @@ void setup() {
   server.begin();
 }
 
+bool ledOn = false;
+unsigned long pulseStart = 0;
+
 void loop() {
   server.handleClient();
-  // Se não receber BPM por 10s, para de piscar
-  if (bpmActive && (millis() - lastBpmUpdate > bpmTimeout)) {
-    bpmActive = false;
-    FastLED.clear();
-    FastLED.show();
-  }
-  if (bpmActive) {
+
+  if (bpm > 0) {
     unsigned long interval = 60000 / bpm;
-    if (millis() - lastBeat > interval) {
-      for (int i = 0; i < NUM_LEDS; i++) leds[i] = CRGB::White;
+    unsigned long pulseDuration = 50; // ms
+
+    if (!ledOn && millis() - lastBeat > interval) {
+      FastLED.clear();
+      fill_solid(leds, NUM_LEDS, CRGB::White);
       FastLED.show();
-      delay(50);
-      for (int i = 0; i < NUM_LEDS; i++) leds[i] = CRGB::Black;
-      FastLED.show();
+      ledOn = true;
+      pulseStart = millis();
       lastBeat = millis();
     }
+
+    if (ledOn && millis() - pulseStart > pulseDuration) {
+      FastLED.clear();
+      FastLED.show();
+      ledOn = false;
+    }
+  } else {
+    FastLED.clear();
+    FastLED.show();
+    ledOn = false;
   }
 }
