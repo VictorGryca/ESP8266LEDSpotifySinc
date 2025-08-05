@@ -1,41 +1,50 @@
 # ESP8266 LED Spotify Sync
 
-Este projeto sincroniza LEDs WS2812 conectados a um ESP8266 com o BPM da música atualmente tocando no Spotify. O script Python (`spotify_to_esp.py`) detecta a música em reprodução, estima o BPM e envia para o ESP, que ajusta os efeitos dos LEDs conforme o ritmo.
+This project synchronizes WS2812 LEDs connected to an ESP8266 with the BPM of the track currently playing on Spotify. The Python script (`spotify_to_esp.py`) detects the song being played, estimates its BPM, and sends it to the ESP, which then adjusts the LED effects to match the rhythm.
 
-## Como funciona
+## How it works
 
-- O script Python usa a API do Spotify para identificar a música tocando.
-- Tenta estimar o BPM usando o preview da faixa (com `librosa`). Se não conseguir, consulta a API do GetSongBPM.
-- O BPM é enviado via HTTP para o ESP8266, que controla os LEDs com a biblioteca FastLED.
+* The Python script uses the Spotify API to identify the currently playing track.
+* It tries to estimate the BPM using the track’s preview (with `librosa`). If that fails, it falls back to querying the GetSongBPM API.
+* The BPM value is sent via HTTP to the ESP8266, which controls the LEDs using the FastLED library.
 
-## Pré-requisitos
+## Prerequisites
 
-- Python 3.x com as bibliotecas: `spotipy`, `librosa`, `requests`
-- ESP8266 com firmware compatível e código FastLED (ver [src/main.cpp](src/main.cpp))
-- Configurar o arquivo `credentials.py` com suas credenciais do Spotify, IP do ESP e chave do GetSongBPM.
+* Python 3.x with the libraries: `spotipy`, `librosa`, `requests`
+* An ESP8266 flashed with compatible firmware and the FastLED-based code (see [src/main.cpp](src/main.cpp))
+* A `credentials.py` file configured with your Spotify credentials, the ESP’s IP address, and your GetSongBPM key.
 
-## Como usar
+## How to use
 
-1. Instale as dependências Python:
+1. Install the Python dependencies:
+
    ```sh
    pip install spotipy librosa requests
-   
-2. Configure o arquivo credentials.py:
-```python
-ESP_IP = "http://<IP_DO_ESP>:80/"
-CLIENT_ID = "<seu_client_id>"
-CLIENT_SECRET = "<seu_client_secret>"
-REDIRECT_URI = "<seu_redirect_uri>"
-GETSONGBPM_KEY = "<sua_api_key>"
-REFERER = "<referer_necessario>"
-```
+   ```
 
-4. Faça upload do código para o ESP8266 (src/main.cpp).
-5. Execute o script Python:
-python spotify_to_esp.py
+2. Configure the `credentials.py` file:
 
-6. Toque uma música no Spotify e veja os LEDs reagirem ao BPM detectado.
-## Observações
-- O script precisa estar rodando enquanto quiser sincronizar os LEDs.
-- O ESP8266 deve estar na mesma rede do computador rodando o script.
-- O BPM pode não ser detectado para todas as músicas (especialmente sem preview).
+   ```python
+   ESP_IP         = "http://<ESP_IP>:80/"
+   CLIENT_ID      = "<your_client_id>"
+   CLIENT_SECRET  = "<your_client_secret>"
+   REDIRECT_URI   = "<your_redirect_uri>"
+   GETSONGBPM_KEY = "<your_api_key>"
+   REFERER        = "<required_referer>"
+   ```
+
+3. Upload the code to the ESP8266 (`src/main.cpp`).
+
+4. Run the Python script:
+
+   ```sh
+   python spotify_to_esp.py
+   ```
+
+5. Play a song on Spotify and watch the LEDs react to the detected BPM.
+
+## Notes
+
+* The Python script must remain running for continuous synchronization.
+* Ensure the ESP8266 is on the same local network as the machine running the script.
+* BPM may not be detected for every track (especially if no preview is available).
